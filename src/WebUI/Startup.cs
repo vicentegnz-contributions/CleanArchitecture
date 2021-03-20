@@ -1,7 +1,8 @@
 using CleanArchitecture.Application;
 using CleanArchitecture.Application.Common.Interfaces;
+using CleanArchitecture.Infrastructure;
 using CleanArchitecture.Infrastructure.Persistence;
-using CleanArchitecture.WebUI.Common;
+using CleanArchitecture.WebUI.Filters;
 using CleanArchitecture.WebUI.Services;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
@@ -14,38 +15,36 @@ using Microsoft.Extensions.Hosting;
 using NSwag;
 using NSwag.Generation.Processors.Security;
 using System.Linq;
-using CleanArchitecture.Infrastructure;
 
 namespace CleanArchitecture.WebUI
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
+        public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            Environment = environment;
         }
 
         public IConfiguration Configuration { get; }
-
-        public IWebHostEnvironment Environment { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddApplication();
-            services.AddInfrastructure(Configuration, Environment);
+            services.AddInfrastructure(Configuration);
 
-            services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddDatabaseDeveloperPageExceptionFilter();
+
+            services.AddSingleton<ICurrentUserService, CurrentUserService>();
 
             services.AddHttpContextAccessor();
 
             services.AddHealthChecks()
                 .AddDbContextCheck<ApplicationDbContext>();
 
-            services.AddControllersWithViews()
-                .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<IApplicationDbContext>())
-                .AddNewtonsoftJson();
+            services.AddControllersWithViews(options =>
+                options.Filters.Add<ApiExceptionFilterAttribute>())
+                    .AddFluentValidation();
 
             services.AddRazorPages();
 
@@ -82,7 +81,7 @@ namespace CleanArchitecture.WebUI
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseDatabaseErrorPage();
+                app.UseMigrationsEndPoint();
             }
             else
             {
@@ -91,7 +90,6 @@ namespace CleanArchitecture.WebUI
                 app.UseHsts();
             }
 
-            app.UseCustomExceptionHandler();
             app.UseHealthChecks("/health");
             app.UseHttpsRedirection();
             app.UseStaticFiles();
@@ -128,7 +126,8 @@ namespace CleanArchitecture.WebUI
 
                 if (env.IsDevelopment())
                 {
-                    spa.UseAngularCliServer(npmScript: "start");
+                    //spa.UseAngularCliServer(npmScript: "start");
+                    spa.UseProxyToSpaDevelopmentServer(Configuration["SpaBaseUrl"] ?? "http://localhost:4200");
                 }
             });
         }

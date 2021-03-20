@@ -1,22 +1,24 @@
 import { Component, TemplateRef } from '@angular/core';
-import { TodoItemsClient, CreateTodoItemCommand, TodoItemDto, UpdateTodoItemCommand, TodosVm, TodoListsClient, TodoListDto, CreateTodoListCommand, UpdateTodoListCommand, UpdateTodoItemDetailCommand } from '../cleanarchitecture-api';
+import { TodoItemsClient, CreateTodoItemCommand, TodoItemDto, UpdateTodoItemCommand,
+         TodosVm, TodoListsClient, TodoListDto, CreateTodoListCommand, UpdateTodoListCommand,
+         UpdateTodoItemDetailCommand } from '../web-api-client';
 import { faPlus, faEllipsisH } from '@fortawesome/free-solid-svg-icons';
 import { BsModalService, BsModalRef } from 'ngx-bootstrap/modal';
 
 @Component({
     selector: 'app-todo-component',
     templateUrl: './todo.component.html',
-    styleUrls: ['./todo.component.css']
+    styleUrls: ['./todo.component.scss']
 })
 export class TodoComponent {
 
-    debug: boolean;
+    debug = false;
 
     vm: TodosVm;
 
     selectedList: TodoListDto;
     selectedItem: TodoItemDto;
-    
+
     newListEditor: any = {};
     listOptionsEditor: any = {};
     itemDetailsEditor: any = {};
@@ -50,7 +52,7 @@ export class TodoComponent {
         this.newListModalRef = this.modalService.show(template);
         setTimeout(() => document.getElementById("title").focus(), 250);
     }
-    
+
     newListCancelled(): void {
         this.newListModalRef.hide();
         this.newListEditor = {};
